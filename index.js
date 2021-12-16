@@ -100,6 +100,34 @@ function addRole() {
       db.query("INSERT INTO role SET ? ", { title: data.title, salary: data.salary });
     });
 }
+// Add Employee
+function addEmployee() {
+  inquirer.prompt([
+    {
+      name: "firstName",
+      message: "Enter first name: ",
+    },
+    {
+      name: "lastName",
+      message: "Enter last name: ",
+    },
+    {
+      name: "title",
+      message: "Employee title: ",
+      type: "list",
+      choices: getRoles(),
+    },
+  ]);
+}
+
+// const allRoles = [];
+// function getRoles() {
+//   db.query("SELECT * FROM role", function (err, res) {
+//     allRoles.forEach(function () {
+//       allRoles.push(value);
+//     });
+//   });
+// }
 
 // Start Program
 main();
