@@ -1,6 +1,5 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
-const { add } = require("lodash");
 
 // connect to db
 const db = mysql.createConnection({
@@ -10,6 +9,28 @@ const db = mysql.createConnection({
   database: "business_db",
 });
 
+// Choices options for inquirer prompt
+const allRoles = [];
+function getRoles() {
+  db.query("SELECT * FROM role", function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allRoles.push(res[i].title);
+    }
+  });
+  return allRoles;
+}
+
+const allManagers = [];
+function getManager() {
+  db.query("SELECT first_name, last_name FROM employee", function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allManagers.push(res[i].first_name);
+    }
+  });
+  return allManagers;
+}
+
+// Beginning Prompt
 function main() {
   inquirer
     .prompt({
@@ -100,34 +121,36 @@ function addRole() {
       db.query("INSERT INTO role SET ? ", { title: data.title, salary: data.salary });
     });
 }
+
 // Add Employee
 function addEmployee() {
-  inquirer.prompt([
-    {
-      name: "firstName",
-      message: "Enter first name: ",
-    },
-    {
-      name: "lastName",
-      message: "Enter last name: ",
-    },
-    {
-      name: "title",
-      message: "Employee title: ",
-      type: "list",
-      choices: getRoles(),
-    },
-  ]);
+  inquirer
+    .prompt([
+      {
+        name: "firstName",
+        message: "Enter first name: ",
+      },
+      {
+        name: "lastName",
+        message: "Enter last name: ",
+      },
+      {
+        name: "title",
+        type: "list",
+        message: "Employee title: ",
+        choices: getRoles(),
+      },
+      {
+        name: "manager",
+        type: "list",
+        message: "Select manager for this employee: ",
+        choices: getManager(),
+      },
+    ])
+    .then((data) => {
+      console.table(data);
+    });
 }
-
-// const allRoles = [];
-// function getRoles() {
-//   db.query("SELECT * FROM role", function (err, res) {
-//     allRoles.forEach(function () {
-//       allRoles.push(value);
-//     });
-//   });
-// }
 
 // Start Program
 main();
