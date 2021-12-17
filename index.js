@@ -9,7 +9,7 @@ const db = mysql.createConnection({
   database: "business_db",
 });
 
-// Choices options for inquirer prompt (Getters)
+// Get Roles
 const allRoles = [];
 function getRoles() {
   db.query("SELECT * FROM role", function (err, res) {
@@ -20,6 +20,7 @@ function getRoles() {
   return allRoles;
 }
 
+// Get Managers
 const allManagers = [];
 function getManager() {
   db.query(
@@ -33,6 +34,7 @@ function getManager() {
   return allManagers;
 }
 
+// Get Employees
 const allEmployees = [];
 function getEmployee() {
   db.query(
@@ -218,3 +220,4 @@ function updateEmployee() {
 
 // Start Program
 main();
+// setTimeout(main, 2000);
