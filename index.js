@@ -9,7 +9,7 @@ const db = mysql.createConnection({
   database: "business_db",
 });
 
-// Choices options for inquirer prompt
+// Choices options for inquirer prompt (Getters)
 const allRoles = [];
 function getRoles() {
   db.query("SELECT * FROM role", function (err, res) {
@@ -22,12 +22,37 @@ function getRoles() {
 
 const allManagers = [];
 function getManager() {
-  db.query("SELECT first_name, last_name FROM employee", function (err, res) {
+  db.query(
+    "SELECT first_name, last_name FROM employee WHERE manager_id IS NULL",
+    function (err, res) {
+      for (let i = 0; i < res.length; i++) {
+        allManagers.push(res[i].first_name);
+      }
+    }
+  );
+  return allManagers;
+}
+
+const allEmployees = [];
+function getEmployee() {
+  db.query(
+    "SELECT first_name, last_name FROM employee WHERE manager_id IS NULL",
+    function (err, res) {
+      for (let i = 0; i < res.length; i++) {
+        allEmployees.push(res[i].first_name);
+      }
+    }
+  );
+  return allEmployees;
+}
+const allDepartments = [];
+function getDepartment() {
+  db.query("SELECT * FROM department", function (err, res) {
     for (let i = 0; i < res.length; i++) {
-      allManagers.push(res[i].first_name);
+      allDepartments.push(res[i].name);
     }
   });
-  return allManagers;
+  return allDepartments;
 }
 
 // Beginning Prompt
@@ -44,6 +69,7 @@ function main() {
         { name: "Add a department", value: "add department" },
         { name: "Add a role", value: "add role" },
         { name: "Add a employee", value: "add employee" },
+        { name: "Update employee role ", value: "update employee" },
       ],
     })
     .then((data) => {
@@ -72,6 +98,10 @@ function main() {
         case "add employee":
           addEmployee();
           break;
+        // Update employee role
+        case "update employee":
+          updateEmployee();
+          break;
       }
     });
 }
@@ -89,9 +119,12 @@ function viewRoles() {
 }
 // View employees
 function viewEmployees() {
-  db.query("SELECT * FROM employee", function (err, res) {
-    console.table(res);
-  });
+  db.query(
+    "SELECT * FROM employee LEFT JOIN role ON employee.role_id = role.id",
+    function (err, res) {
+      console.table(res);
+    }
+  );
 }
 //  Add a department
 function addDepartment() {
@@ -116,9 +149,19 @@ function addRole() {
         name: "salary",
         message: "Enter the salary: ",
       },
+      {
+        name: "department",
+        message: "Select which department this role belongs too",
+        type: "list",
+        choices: getDepartment(),
+      },
     ])
     .then((data) => {
-      db.query("INSERT INTO role SET ? ", { title: data.title, salary: data.salary });
+      db.query("INSERT INTO role SET ? ", {
+        title: data.title,
+        salary: data.salary,
+        department_id: getDepartment().indexOf(data.department),
+      });
     });
 }
 
@@ -135,9 +178,9 @@ function addEmployee() {
         message: "Enter last name: ",
       },
       {
-        name: "title",
+        name: "role",
         type: "list",
-        message: "Employee title: ",
+        message: "Employee role: ",
         choices: getRoles(),
       },
       {
@@ -145,6 +188,27 @@ function addEmployee() {
         type: "list",
         message: "Select manager for this employee: ",
         choices: getManager(),
+      },
+    ])
+    .then((data) => {
+      db.query("INSERT INTO employee SET ?", {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        role_id: getRoles().indexOf(data.role) + 1,
+        manager_id: getManager().indexOf(data.manager) + 1,
+      });
+    });
+}
+
+// Update employee role
+function updateEmployee() {
+  inquirer
+    .prompt([
+      {
+        name: "employeeUpdate",
+        message: "Select employee to update: ",
+        type: "list",
+        choices: getEmployee(),
       },
     ])
     .then((data) => {
